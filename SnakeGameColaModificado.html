@@ -14,7 +14,7 @@
 <body>
 <canvas id="snakeCanvas" width="400" height="400"></canvas>
 <script>
-    class Cola {
+    class Cola { // Implementación de la Clase Cola
         constructor(tamanoMaximo) {
             this.tamanoMaximo = tamanoMaximo;
             this.items = [];
@@ -51,16 +51,16 @@
     const canvas = document.getElementById('snakeCanvas');
     const ctx = canvas.getContext('2d');
     const box = 20;
-    let snake = new Cola(400);
-    snake.enqueue({ x: 9 * box, y: 9 * box });
-
+    let snake = new Cola(400); //Se instancia la clase Cola para crear la serpiente
+    snake.enqueue({ x: 9 * box, y: 9 * box }); //Se añade el primer segmento
     let direction = 'RIGHT';
-    let food = {
+
+    let food = { //Se crea un espacio aleatorio donde estará la comida
         x: Math.floor(Math.random() * 20) * box,
         y: Math.floor(Math.random() * 20) * box
     };
 
-    document.addEventListener('keydown', directionControl);
+    document.addEventListener('keydown', directionControl); //Para menejar la dirección de la serpiente
 
     function directionControl(event) {
         if (event.keyCode === 37 && direction !== 'RIGHT') direction = 'LEFT';
@@ -72,7 +72,7 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        if (snake.tamanoActual() >= (canvas.width / box) * (canvas.height / box)) {
+        if (snake.tamanoActual() >= (canvas.width / box) * (canvas.height / box)) { //Si la cola ya está llena y no hay más espacio
             clearInterval(game); // Detiene el juego
             alert('¡Felicidades! Has llenado toda el área. ¡Has ganado!');
             return;
@@ -80,63 +80,56 @@
 
         let snakeArray = snake.mostrar();
 
+        //Se realizó la modificación de que ahora el último elemento en la cola es la cabeza de la serpiente,
+        //por lo que ese es el que estará con color verde fuerte
         for (let i = 0; i < snakeArray.length; i++) {
-            ctx.fillStyle = (i === 0) ? 'green' : 'lightgreen';
+            ctx.fillStyle = (i === snakeArray.length - 1) ? 'green' : 'lightgreen';
             ctx.fillRect(snakeArray[i].x, snakeArray[i].y, box, box);
             ctx.strokeStyle = 'darkgreen';
             ctx.strokeRect(snakeArray[i].x, snakeArray[i].y, box, box);
         }
 
         ctx.fillStyle = 'red';
-        ctx.fillRect(food.x, food.y, box, box);
+        ctx.fillRect(food.x, food.y, box, box); //Se dibuja la comida
 
-        let snakeX = snake.frente().x;
-        let snakeY = snake.frente().y;
+        snakeArray = snake.mostrar();
+        let cabeza = snakeArray[snakeArray.length - 1]; //Se obtiene la posición de la cabeza
+        let snakeX = cabeza.x;
+        let snakeY = cabeza.y;
 
+        //Mueve la cabeza de la serpiente
         if (direction === 'LEFT') snakeX -= box;
         if (direction === 'UP') snakeY -= box;
         if (direction === 'RIGHT') snakeX += box;
         if (direction === 'DOWN') snakeY += box;
 
-        if (snakeX === food.x && snakeY === food.y) {
+        //Se crea la nueva cabeza luego del movimiento
+        const newHead = { x: snakeX, y: snakeY };
+
+        if (snakeX === food.x && snakeY === food.y) { //Si la serpiente ha comido
             food = {
-                x: Math.floor(Math.random() * 20) * box,
+                x: Math.floor(Math.random() * 20) * box, //Se crea una nueva comida en otra posición aleatoria
                 y: Math.floor(Math.random() * 20) * box
             };
+
+            snake.enqueue(newHead); //Y se añade la nueva cabeza (Por eso se cambió para que la cabeza estuviera al final)
         } else {
-            snake.dequeue();
-
-            snakeX = snake.frente().x;
-            snakeY = snake.frente().y;
-
-            const newHead = { x: snakeX, y: snakeY };
-            snake.item[0] = newHead;
+            snake.dequeue(); //Si no ha comido se elimina el último segmento del cuerpo de la cola de la serpiente
+            snake.enqueue(newHead); //Y se añade la nueva cabeza para que se mueva
         }
 
-        if (snakeX< 0 || snakeY < 0 || snakeX >= canvas.width || snakeY >= canvas.height || collision(newHead, snake.mostrar())) {
+        //Evalua si la serpiente ha chocado con los bordes o contra ella misma
+        if (snakeX < 0 || snakeY < 0 || snakeX >= canvas.width || snakeY >= canvas.height || collision(newHead, snakeArray.slice(0, -1))) {
             clearInterval(game);
             alert('Game Over!');
         }
 
-        const ultimoElemento = snake.mostrar()[snake.tamanoActual() - 1];
-        let ultimoX = ultimoElemento.x;
-        let ultimoY = ultimoElemento.y;
-
-        if (direction === 'LEFT') ultimoX += box;
-        if (direction === 'UP') ultimoY += box;
-        if (direction === 'RIGHT') ultimoX -= box;
-        if (direction === 'DOWN') ultimoY -= box;
-
-        const newUltimo = { x: ultimoX, y: ultimoY };
-        snake.enqueue(newUltimo);
-
-        // Mostrar puntaje
         ctx.fillStyle = 'black';
         ctx.font = '20px Arial';
         ctx.fillText('Score: ' + (snake.tamanoActual() - 1), 10, 20);
     }
 
-    function collision(head, array) {
+    function collision(head, array) { //Evalua si la cabeza de la serpiente ha chocado con algún segmento de su cuerpo
         for (let i = 0; i < array.length; i++) {
             if (head.x === array[i].x && head.y === array[i].y) {
                 return true;
@@ -145,7 +138,7 @@
         return false;
     }
 
-    let game = setInterval(draw, 800);
+    let game = setInterval(draw, 200);
 </script>
 </body>
 </html>
